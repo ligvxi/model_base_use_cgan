@@ -1,0 +1,84 @@
+0.修改dqn，用自定义的reward和done       done
+1.用跑好的自定义r的dqn存储一些数据        done
+2.跑起来cgan
+    DG的inputs_shape                 done
+    结果可视化                         done
+    调用函数                          doing
+3.改出来cgan_dqn                      done
+4.这个需要讨论一下，buffer感觉不是越大越好 对比dqn的10000  cdqn的10000 cdqn的20000 cdqn的50000
+                一个episode才1k左右的数据 所以感觉1w的数据都够了
+
+
+
+现在的问题是：
+    在拿test生成的时候挺不错的，但是在dqn里面生成怎么这么拉胯呢？？？？？？？？？？
+    1.猜想1，在训练的时候不小心把test也放进去了
+        不应该啊，代码看起来是没问题的
+    2.猜想2，啊啊啊啊啊啊啊啊啊啊啊想不出来
+        检查一下代码逻辑吧
+        ok 果然是代码有个地方写错了
+
+    3.接下来，就是写固定buffer的dqn代码，和固定的cagn_dqn代码
+        现在cgan的训练样本数是1w，所以先固定buffer的大小是1w
+        1.跑一个正常dqn
+        靠，发现了一个问题，done忘了保存到memory里面去了，所以要重新收集数据，而且要把done给加上
+
+       fixed_dqn，buffer_size = 10k              ok
+       fixed_cgan_dqn, buffer_size = 10k
+       fixed_cgan_dqn, buffer_size = 15k
+       fixed_cgan_dqn, buffer_size = 20k
+
+       现在是跑起来了，但是有个小疑问，buffer里面的数据不够平均，明天看 如果学不好，就再换正常数据
+
+
+       现在是buffer里面友好输出了，来试一下fixed_dqn跑的怎么样，希望能跑的还不错
+
+
+6.1日志更新
+    直接塞满buffer是不可行的
+
+
+6.2
+    buffer  大小 ：10w
+            是否流动 ： 否
+            数据来源：动态收集
+
+
+用w服务器训练cgan 今晚要改完并跑起来
+    改成一帧的p（s',|s,t）调整好sa的比重
+
+用s服务器跑一帧的dqn 今晚跑出来
+
+
+参数
+    跳帧
+    cgan网络结构
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

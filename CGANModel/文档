@@ -1,0 +1,69 @@
+1.限定buffer的大小5k， 且不更新，只用这些数据来学习dqn
+2.拿上述的5k数据，来训练一个cagn，使用cgan_dqn
+    1.原5k数据  和model交互
+    2.使用model
+    3.更新buffer的大小
+
+问题：
+    样本一样，实验环境也应该一样
+    所以还是需要和环境交互，仅仅是使用了cgan扩大了buffer的容量而已
+
+
+越来越感觉是不可行的
+简单的游戏里面，一个s‘是由s和a共同决定的
+但是在这个pong里面，s’是由s，不一定和a 决定的，name神经网络能学到这个地方吗
+
+
+# 四张 卷积 无z 反卷积
+shape = tf.shape(s)[0]
+net = lrelu(conv2d(s, 4, 5, 5, 4, 4, name='g_conv1'))
+net = lrelu(bn(conv2d(net, 4, 5, 5, 4, 4, name='g_conv2'), is_training=is_training, scope='g_bn1'))
+
+a = tf.reshape(a, [shape, 1, 1, 6])
+a = a * tf.ones([shape, 6, 6, 6])
+net = concat([net, a], 3)
+net = tf.layers.flatten(net)
+
+net = lrelu(bn(linear(net, 512, scope='g_fc1'), is_training=is_training, scope='g_bn2'))
+net = lrelu(bn(linear(net, 42, scope='g_fc2'), is_training=is_training, scope='g_bn3'))
+
+net = tf.reshape(net, [shape, 1, 1, 42])
+net = tf.layers.conv2d_transpose(net, 16, 16, strides=2, activation=tf.nn.relu, name="g_dconv1")
+out = tf.layers.conv2d_transpose(net, 4, 54, strides=2, activation=tf.nn.relu, name="g_dconv2")
+
+
+# 4 6硬拼+全连接
+shape = tf.shape(s)[0]
+a = tf.reshape(a, [shape, 1, 1, 6])
+a = a * tf.ones([shape, 84, 84, 6])
+z = concat([s, a], 3)
+net = tf.layers.flatten(z)
+net = tf.nn.relu(bn(linear(net, 1024, scope='g_fc1'), is_training=is_training, scope='g_bn1'))
+net = tf.nn.relu(bn(linear(net, 128 * 7 * 7, scope='g_fc2'), is_training=is_training, scope='g_bn2'))
+net = tf.nn.sigmoid(bn(linear(net, 84 * 84 * 4, scope='g_fc3'), is_training=is_training, scope='g_bn3'))
+out = tf.reshape(net, [shape, 84, 84, 4])
+
+# 降维再拼接+全连接
+shape = tf.shape(s)[0]
+s = tf.layers.flatten(s)
+net = tf.nn.relu(bn(linear(s, 64, scope='g_fc1'), is_training=is_training, scope='g_bn1'))
+
+z = concat([net, a], 1)
+net = tf.nn.relu(bn(linear(z, 1024, scope='g_fc2'), is_training=is_training, scope='g_bn2'))
+net = tf.nn.sigmoid(bn(linear(net, 84 * 84 * 4, scope='g_fc3'), is_training=is_training, scope='g_bn3'))
+out = tf.reshape(net, [shape, 84, 84, 4])
+
+
+cgan_0: 84*84*1+4+6拼接+全连接
+
+思考：
+    不能卷积，因为会丢失和模糊处理很多信息，而我需要的是小球和板子的精确位置
+
+# 直接sa拉直拼+全连接
+shape = tf.shape(s)[0]
+s = tf.reshape(s, [shape, 84 * 84 * 4])
+net = concat([s, a], 1)
+net = tf.nn.relu(bn(linear(net, 1024, scope='g_fc1'), is_training=is_training, scope='g_bn1'))
+net = tf.nn.relu(bn(linear(net, 128 * 7 * 7, scope='g_fc2'), is_training=is_training, scope='g_bn2'))
+net = tf.nn.sigmoid(bn(linear(net, 84 * 84 * 4, scope='g_fc3'), is_training=is_training, scope='g_bn3'))
+out = tf.reshape(net, [shape, 84, 84, 4])
