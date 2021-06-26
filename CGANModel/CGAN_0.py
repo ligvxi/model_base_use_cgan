@@ -75,12 +75,14 @@ class CGAN(object):
         # not use z
         with tf.variable_scope("generator", reuse=reuse):
             shape = tf.shape(s)[0]
-            net = lrelu(conv2d(s, 4, 5, 5, 4, 4, name='g_conv1'))
-            net = lrelu(bn(conv2d(net, 4, 5, 5, 4, 4, name='g_conv2'), is_training=is_training, scope='g_bn1'))
-            net = tf.layers.flatten(net)
-            net = concat([net, a], 1)
-            net = tf.nn.relu(bn(linear(net, 1024, scope='g_fc1'), is_training=is_training, scope='g_bn2'))
-            net = tf.nn.sigmoid(bn(linear(net, 84 * 84 * 4, scope='g_fc2'), is_training=is_training, scope='g_bn3'))
+            # net = lrelu(conv2d(s, 4, 5, 5, 4, 4, name='g_conv1'))
+            # net = lrelu(bn(conv2d(net, 4, 5, 5, 4, 4, name='g_conv2'), is_training=is_training, scope='g_bn1'))
+            # net = tf.layers.flatten(net)
+            z = tf.ones([shape, self.z_dim])
+            s = tf.reshape(s, [shape, 84 * 84 * 4])
+            net = concat([z, s, a], 1)
+            net = tf.nn.relu(bn(linear(net, 4096, scope='g_fc1'), is_training=is_training, scope='g_bn1'))
+            net = tf.nn.sigmoid(bn(linear(net, 84 * 84 * 4, scope='g_fc3'), is_training=is_training, scope='g_bn3'))
             out = tf.reshape(net, [shape, 84, 84, 4])
             return out
 
