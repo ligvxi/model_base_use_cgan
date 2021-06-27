@@ -248,8 +248,6 @@ class CGAN(object):
         a_list = np.zeros((1, 6), dtype=np.uint8)
         a = np.eye(6)[a]
         a_list[0] = a
-        z_sample = tf.ones([1, 84, 84, 1])
-        # (1, 16)(1, 84, 84, 1)(1, 6)
         samples = self.sess.run(self.fake_images,
                                 feed_dict={self.s: s_list, self.a: a_list})
 
